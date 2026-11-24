@@ -1,0 +1,440 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Cargas</title>
+<meta name="theme-color" content="#151617">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Cargas">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" href="icon-192.png">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500&family=Space+Grotesk:wght@500;700&display=swap">
+<style>
+/* base que o hospedeiro original já fornecia */
+:root { color-scheme: light; padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
+body { margin: 0; font: 14px system-ui, -apple-system, sans-serif; }
+img { max-width: 100%; }
+[hidden] { display: none !important; }
+
+
+
+
+/* Layout: coluna única estreita, fichas como barras que expandem, tema escuro fixo */
+:root {
+  --bg: #151617;
+  --surface: #1e1f21;
+  --surface-2: #27292b;
+  --line: #2f3133;
+  --fg: #e4e5e7;
+  --muted: #85888d;
+  --accent: #c8cacd;
+  --danger: #e58a84;
+  --faint: #656970;
+  --font-display: 'Space Grotesk', system-ui, -apple-system, sans-serif;
+  --font-body: 'Inter', system-ui, -apple-system, sans-serif;
+  color-scheme: dark;
+}
+html, body { background: var(--bg); }
+body {
+  color: var(--fg);
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.4;
+  padding-block: 20px 48px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  -webkit-tap-highlight-color: transparent;
+}
+main { max-width: 390px; margin: 0 auto; min-height: 100vh; display: flex; flex-direction: column; gap: 12px; }
+header { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-bottom: 8px; }
+h1 { font-family: var(--font-display); font-weight: 700; font-size: 1.75rem; letter-spacing: -0.01em; margin: 0; }
+button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.pill {
+  min-height: 44px; padding: 0 18px; border-radius: 999px;
+  border: 1px solid var(--line); background: var(--surface);
+  font-size: 0.9375rem; font-weight: 500;
+}
+.pill[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: #0b1220; }
+
+.ficha { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; overflow: hidden; }
+.ficha-head {
+  width: 100%; min-height: 60px; padding: 0 16px;
+  display: flex; align-items: center; justify-content: space-between; gap: 12px; text-align: left;
+}
+.ficha-title { font-family: var(--font-display); font-weight: 700; font-size: 1.125rem; min-width: 0; overflow-wrap: anywhere; }
+.ficha-meta { display: flex; align-items: center; gap: 14px; color: var(--muted); font-size: 0.875rem; flex-shrink: 0; }
+.plus { position: relative; width: 18px; height: 18px; }
+.plus::before, .plus::after { content: ""; position: absolute; background: var(--accent); border-radius: 1px; }
+.plus::before { left: 0; right: 0; top: 8px; height: 2px; }
+.plus::after { top: 0; bottom: 0; left: 8px; width: 2px; transition: transform .18s ease, opacity .18s ease; }
+.ficha[data-open="true"] .plus::after { transform: scaleY(0); opacity: 0; }
+
+.ficha-body { border-top: 1px solid var(--line); padding: 4px 16px 12px; }
+.ex { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 52px; border-bottom: 1px solid var(--line); }
+.ex:last-of-type { border-bottom: 0; }
+.ex-name { min-width: 0; overflow-wrap: anywhere; }
+.carga { display: flex; align-items: baseline; gap: 4px; flex-shrink: 0; }
+.carga input {
+  width: 4.5rem; min-height: 44px; text-align: right;
+  background: transparent; color: var(--fg); border: 1px solid transparent; border-radius: 10px;
+  font-family: var(--font-display); font-weight: 700; font-size: 1.25rem;
+  font-variant-numeric: tabular-nums; padding: 0 8px;
+}
+.carga input:hover { border-color: var(--line); }
+.carga input:focus { background: var(--surface-2); border-color: var(--accent); outline: none; }
+.carga span { color: var(--muted); font-size: 0.875rem; }
+.vazio { color: var(--muted); padding: 14px 0 6px; }
+
+/* carga como botão e telinha de ajuste */
+.carga { min-height: 44px; padding: 0 14px; align-items: center; border-radius: 10px; border: 1px solid var(--line); background: var(--surface-2); }
+.carga b { font-family: var(--font-display); font-weight: 700; font-size: 1.25rem; font-variant-numeric: tabular-nums; }
+.carga:active { border-color: var(--accent); }
+.overlay {
+  position: fixed; inset: 0; z-index: 20; background: rgba(5, 7, 9, 0.72);
+  display: flex; align-items: center; justify-content: center;
+  padding: calc(16px + env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) calc(16px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px));
+}
+.sheet { width: 100%; max-width: 358px; background: var(--surface); border: 1px solid var(--line); border-radius: 18px; padding: 20px; display: flex; flex-direction: column; gap: 18px; }
+.sheet-ficha { margin: 0; color: var(--muted); font-size: 0.8125rem; letter-spacing: 0.06em; text-transform: uppercase; }
+.sheet h2 { margin: 4px 0 0; font-family: var(--font-display); font-size: 1.25rem; overflow-wrap: anywhere; }
+.stepper { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.step { flex-shrink: 0; width: 56px; height: 56px; border-radius: 50%; border: 1px solid var(--line); background: var(--surface-2); font-size: 1.75rem; line-height: 1; color: var(--accent); }
+.step:active { background: var(--accent); color: #0b1220; }
+.valor { flex: 1; min-width: 0; display: flex; align-items: baseline; justify-content: center; gap: 6px; }
+.valor input { width: 100%; min-width: 0; text-align: center; background: transparent; color: var(--fg); border: 0; border-bottom: 2px solid var(--line); border-radius: 0; font-family: var(--font-display); font-weight: 700; font-size: 2.5rem; font-variant-numeric: tabular-nums; padding: 0; }
+.valor input:focus { border-bottom-color: var(--accent); outline: none; }
+.valor span { color: var(--muted); }
+.quick { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.quick .btn { padding: 0; font-variant-numeric: tabular-nums; }
+.sheet-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+/* modo edição */
+.field {
+  min-height: 44px; width: 100%; min-width: 0; padding: 0 12px;
+  background: var(--surface-2); color: var(--fg); border: 1px solid var(--line); border-radius: 10px;
+  font: inherit;
+}
+.field:focus { border-color: var(--accent); outline: none; }
+.edit-row { display: flex; gap: 8px; align-items: center; padding-top: 10px; }
+.edit-row.ex-edit { padding: 6px 0; border-bottom: 0; }
+.icon-btn {
+  flex-shrink: 0; width: 44px; height: 44px; border-radius: 10px; color: var(--muted);
+  font-size: 1.25rem; line-height: 1; border: 1px solid var(--line);
+}
+.icon-btn:hover { color: var(--danger); border-color: var(--danger); }
+.btn {
+  min-height: 44px; padding: 0 16px; border-radius: 10px; font-weight: 500;
+  border: 1px solid var(--line); background: var(--surface-2); flex-shrink: 0;
+}
+.btn.primary { background: var(--accent); border-color: var(--accent); color: #0b1220; }
+.btn.danger { color: var(--danger); border-color: var(--danger); background: transparent; }
+.btn.danger.sure { background: var(--danger); color: #1a0b0a; }
+.ficha-actions { display: flex; justify-content: flex-end; padding-top: 12px; gap: 8px; }
+.add-ficha { min-height: 52px; border: 1px dashed var(--line); border-radius: 14px; color: var(--accent); font-weight: 500; width: 100%; }
+.nota { color: var(--muted); font-size: 0.8125rem; padding: 4px 2px; }
+
+/* minimalismo: sem bordas extras, sem contagem, carga como texto */
+h1 { font-size: 1.5rem; }
+.pill { min-height: 40px; padding: 0 2px; border: 0; background: none; color: var(--muted); font-weight: 400; }
+.pill[aria-pressed="true"] { background: none; color: var(--fg); }
+.ficha { border: 0; border-radius: 12px; }
+.ficha-head { min-height: 56px; }
+.ficha-title { font-weight: 500; font-size: 1.0625rem; }
+.ficha-meta > span:first-child { display: none; }
+.carga { border: 0; background: none; padding: 0 0 0 12px; }
+.carga:active b { color: var(--accent); }
+.sheet { border: 0; }
+.step { border-color: transparent; background: var(--surface-2); }
+.btn.primary, .step:active { color: #151617; }
+/* unidade da carga: kg ou placas */
+.unidade { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 4px; background: var(--surface-2); border-radius: 12px; }
+.un { min-height: 40px; border-radius: 9px; color: var(--muted); font-weight: 500; }
+.un[aria-pressed="true"] { background: var(--bg); color: var(--fg); }
+
+/* séries x repetições: detalhe discreto ao lado do nome */
+.sr { margin-left: 8px; color: var(--faint); font-weight: 300; font-size: 0.8125rem; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.sr-row { padding: 0 0 8px; }
+.sr-field { min-height: 40px; font-size: 0.875rem; font-weight: 300; color: var(--muted); }
+.sr-field::placeholder { color: var(--faint); }
+
+/* reordenar fichas e exercícios */
+.mover { display: flex; gap: 4px; flex-shrink: 0; }
+.mv { width: 36px; height: 44px; border-radius: 10px; border: 1px solid var(--line); color: var(--muted); font-size: 1.05rem; line-height: 1; }
+.mv:active { color: var(--fg); border-color: var(--accent); }
+.mv:disabled { opacity: 0.3; cursor: default; }
+@media (prefers-reduced-motion: reduce) { .plus::after { transition: none; } }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>Cargas</h1>
+    <button class="pill" id="toggle-edit" type="button" aria-pressed="false" data-a="toggle-edit">Editar fichas</button>
+  </header>
+  <div id="app"></div>
+  <div class="overlay" id="overlay" hidden data-a="fechar-fundo">
+    <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="sheet-title">
+      <div>
+        <p class="sheet-ficha" id="sheet-ficha"></p>
+        <h2 id="sheet-title"></h2>
+      </div>
+      <div class="unidade" role="group" aria-label="Unidade da carga">
+        <button class="un" type="button" data-a="un" data-u="kg" aria-pressed="true">kg</button>
+        <button class="un" type="button" data-a="un" data-u="placas" aria-pressed="false">placas</button>
+      </div>
+      <div class="stepper">
+        <button class="step" type="button" data-a="bump" data-d="-1" aria-label="Diminuir 1">−</button>
+        <label class="valor"><input id="sheet-input" inputmode="decimal" autocomplete="off" aria-label="Carga"><span id="sheet-un">kg</span></label>
+        <button class="step" type="button" data-a="bump" data-d="1" aria-label="Aumentar 1">+</button>
+      </div>
+      
+      <div class="sheet-actions">
+        <button class="btn" type="button" data-a="cancelar">Cancelar</button>
+        <button class="btn primary" type="button" data-a="salvar">Salvar</button>
+      </div>
+    </div>
+  </div>
+  
+</main>
+<script>
+(function () {
+  var KEY = 'cargas-v1';
+  var editMode = false;
+  var confirmId = null;
+  var state = load();
+
+  function uid() { return Math.random().toString(36).slice(2, 9); }
+  function esc(s) {
+    return String(s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+  function ex(nome, carga, sr) { return { id: uid(), nome: nome, carga: String(carga), sr: sr || '', un: 'kg' }; }
+  function normSr(s) {
+    var m = String(s).match(/^\s*(\d+)\s*[xX×*]\s*([\d\-–]+)\s*$/);
+    return m ? m[1] + 'x' + m[2] : String(s).trim();
+  }
+  function seed() {
+    return {
+      exemplo: true,
+      fichas: [
+        { id: uid(), nome: 'A · Peito', aberta: true, exs: [
+          ex('Supino reto', 40, '4x12'), ex('Supino inclinado com halteres', 16, '3x12'),
+          ex('Crucifixo na máquina', 30, '3x15'), ex('Tríceps na corda', 25, '4x12') ] },
+        { id: uid(), nome: 'B · Costas', aberta: false, exs: [
+          ex('Puxada frontal', 50, '4x12'), ex('Remada baixa', 45, '4x12'),
+          ex('Remada curvada', 40, '3x10'), ex('Rosca direta', 20, '3x12') ] },
+        { id: uid(), nome: 'C · Perna', aberta: false, exs: [
+          ex('Agachamento livre', 60, '4x10'), ex('Leg press', 120, '4x12'), ex('Cadeira extensora', 45, '3x15'),
+          ex('Mesa flexora', 35, '3x12'), ex('Panturrilha em pé', 50, '4x15') ] }
+      ]
+    };
+  }
+  function load() {
+    try {
+      var raw = localStorage.getItem(KEY);
+      if (raw) {
+        var s = JSON.parse(raw);
+        if (s && Array.isArray(s.fichas)) return s;
+      }
+    } catch (e) {}
+    return seed();
+  }
+  function save(touched) {
+    if (touched) state.exemplo = false;
+    try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {}
+  }
+  function find(id) { return state.fichas.filter(function (f) { return f.id === id; })[0]; }
+
+  function movers(a, fid, eid, first, last, nome) {
+    var attrs = ' data-a="' + a + '" data-f="' + fid + '"' + (eid ? ' data-e="' + eid + '"' : '');
+    return '<span class="mover">' +
+      '<button class="mv" type="button"' + attrs + ' data-d="-1"' + (first ? ' disabled' : '') + ' aria-label="Mover ' + esc(nome) + ' para cima">↑</button>' +
+      '<button class="mv" type="button"' + attrs + ' data-d="1"' + (last ? ' disabled' : '') + ' aria-label="Mover ' + esc(nome) + ' para baixo">↓</button></span>';
+  }
+  function mover(list, item, d) {
+    var i = list.indexOf(item), j = i + d;
+    if (i < 0 || j < 0 || j >= list.length) return;
+    list.splice(i, 1);
+    list.splice(j, 0, item);
+  }
+  function refocus(a, fid, eid, d) {
+    var other = d === '1' ? '-1' : '1';
+    [d, other].some(function (x) {
+      var b = document.querySelector('[data-a="' + a + '"][data-f="' + fid + '"]' + (eid ? '[data-e="' + eid + '"]' : '') + '[data-d="' + x + '"]');
+      if (b && !b.disabled) { b.focus(); return true; }
+      return false;
+    });
+  }
+
+  function render() {
+    var app = document.getElementById('app');
+    var wrap = document.createElement('div');
+    wrap.style.cssText = 'display:flex;flex-direction:column;gap:12px';
+    var html = '';
+    state.fichas.forEach(function (f, fi) {
+      var open = editMode || f.aberta;
+      html += '<section class="ficha" data-open="' + open + '">';
+      html += '<button class="ficha-head" type="button" data-a="toggle" data-f="' + f.id + '" aria-expanded="' + open + '">' +
+        '<span class="ficha-title">' + esc(f.nome) + '</span>' +
+        '<span class="ficha-meta"><span>' + f.exs.length + (f.exs.length === 1 ? ' exercício' : ' exercícios') + '</span><span class="plus" aria-hidden="true"></span></span></button>';
+      if (open) {
+        html += '<div class="ficha-body">';
+        if (editMode) {
+          html += '<div class="edit-row"><input class="field" id="nome-' + f.id + '" data-a="nome-ficha" data-f="' + f.id + '" value="' + esc(f.nome) + '" aria-label="Nome da ficha">' + movers('mov-ficha', f.id, '', fi === 0, fi === state.fichas.length - 1, f.nome) + '</div>';
+        }
+        if (!f.exs.length) html += '<p class="vazio">Nenhum exercício nesta ficha ainda.</p>';
+        f.exs.forEach(function (e, ei) {
+          if (editMode) {
+            html += '<div class="edit-row ex-edit">' +
+              '<input class="field" data-a="nome-ex" data-f="' + f.id + '" data-e="' + e.id + '" value="' + esc(e.nome) + '" aria-label="Nome do exercício">' +
+              movers('mov-ex', f.id, e.id, ei === 0, ei === f.exs.length - 1, e.nome) +
+              '<button class="icon-btn" type="button" data-a="del-ex" data-f="' + f.id + '" data-e="' + e.id + '" aria-label="Remover ' + esc(e.nome) + '">×</button></div>' +
+              '<div class="edit-row sr-row"><input class="field sr-field" data-a="sr-ex" data-f="' + f.id + '" data-e="' + e.id + '" value="' + esc(e.sr || '') + '" placeholder="Séries x repetições, ex: 4x12" aria-label="Séries e repetições de ' + esc(e.nome) + '"></div>';
+          } else {
+            html += '<div class="ex"><span class="ex-name">' + esc(e.nome) + (e.sr ? '<span class="sr">' + esc(e.sr) + '</span>' : '') + '</span>' +
+              '<button class="carga" type="button" data-a="abrir-carga" data-f="' + f.id + '" data-e="' + e.id + '" aria-label="Ajustar carga de ' + esc(e.nome) + '"><b>' + (e.carga ? esc(e.carga) : '—') + '</b><span>' + (e.un === 'placas' ? (e.carga === '1' ? 'placa' : 'placas') : 'kg') + '</span></button></div>';
+          }
+        });
+        if (editMode) {
+          html += '<div class="edit-row"><input class="field" id="novo-' + f.id + '" data-a="novo-ex-input" data-f="' + f.id + '" placeholder="Novo exercício" aria-label="Nome do novo exercício">' +
+            '<button class="btn primary" type="button" data-a="add-ex" data-f="' + f.id + '">Adicionar</button></div>';
+          var sure = confirmId === f.id;
+          html += '<div class="ficha-actions"><button class="btn danger' + (sure ? ' sure' : '') + '" type="button" data-a="' + (sure ? 'del-ficha-ok' : 'del-ficha') + '" data-f="' + f.id + '">' +
+            (sure ? 'Confirmar: apagar ficha' : 'Apagar ficha') + '</button></div>';
+        }
+        html += '</div>';
+      }
+      html += '</section>';
+    });
+    if (editMode) html += '<button class="add-ficha" type="button" data-a="add-ficha">+ Nova ficha</button>';
+    if (!state.fichas.length) html += '<p class="vazio">Nenhuma ficha. Toque em Editar fichas para criar a primeira.</p>';
+    wrap.innerHTML = html;
+    app.replaceChildren(wrap);
+    var t = document.getElementById('toggle-edit');
+    t.setAttribute('aria-pressed', String(editMode));
+    t.textContent = editMode ? 'Concluir' : 'Editar fichas';
+  }
+
+  function addEx(fid) {
+    var input = document.getElementById('novo-' + fid);
+    var nome = input ? input.value.trim() : '';
+    if (!nome) { if (input) input.focus(); return; }
+    find(fid).exs.push(ex(nome, ''));
+    save(true); render();
+    var again = document.getElementById('novo-' + fid);
+    if (again) again.focus();
+  }
+
+  var sheet = null;
+  function fmt(n) { return String(Math.round(n * 100) / 100).replace('.', ','); }
+  function parse(s) { var n = parseFloat(String(s).replace(',', '.')); return isNaN(n) ? null : n; }
+  function exOf(f, eid) { return f ? f.exs.filter(function (x) { return x.id === eid; })[0] : null; }
+  function setUn(u) {
+    document.getElementById('sheet-un').textContent = u === 'placas' ? 'placas' : 'kg';
+    Array.prototype.forEach.call(document.querySelectorAll('.un'), function (b) {
+      b.setAttribute('aria-pressed', String(b.getAttribute('data-u') === u));
+    });
+  }
+  function openSheet(fid, eid) {
+    var f = find(fid), e = exOf(f, eid);
+    if (!e) return;
+    sheet = { fid: fid, eid: eid, un: e.un === 'placas' ? 'placas' : 'kg' };
+    setUn(sheet.un);
+    document.getElementById('sheet-ficha').textContent = f.nome;
+    document.getElementById('sheet-title').textContent = e.nome;
+    document.getElementById('sheet-input').value = e.carga;
+    document.getElementById('overlay').hidden = false;
+  }
+  function closeSheet() { sheet = null; document.getElementById('overlay').hidden = true; }
+  function bump(d) {
+    var inp = document.getElementById('sheet-input');
+    var n = parse(inp.value);
+    inp.value = fmt(Math.max(0, (n === null ? 0 : n) + d));
+  }
+  function saveSheet() {
+    if (!sheet) return;
+    var inp = document.getElementById('sheet-input');
+    var raw = inp.value.trim(), n = parse(raw);
+    if (raw && n === null) { inp.focus(); return; }
+    var e = exOf(find(sheet.fid), sheet.eid);
+    if (e) { e.carga = raw ? fmt(Math.max(0, n)) : ''; e.un = sheet.un; save(true); }
+    closeSheet(); render();
+  }
+  document.getElementById('sheet-input').addEventListener('keydown', function (ev) {
+    if (ev.key === 'Enter') { ev.preventDefault(); saveSheet(); }
+  });
+  document.addEventListener('keydown', function (ev) { if (ev.key === 'Escape' && sheet) closeSheet(); });
+
+  document.addEventListener('click', function (ev) {
+    var el = ev.target.closest('[data-a]');
+    if (!el) return;
+    var a = el.getAttribute('data-a'), fid = el.getAttribute('data-f'), eid = el.getAttribute('data-e');
+    var f = fid ? find(fid) : null;
+    if (a === 'toggle' && f) { if (!editMode) { f.aberta = !f.aberta; save(false); render(); } }
+    else if (a === 'toggle-edit') { editMode = !editMode; confirmId = null; render(); }
+    else if (a === 'add-ficha') {
+      var nova = { id: uid(), nome: 'Nova ficha', aberta: true, exs: [] };
+      state.fichas.push(nova); save(true); render();
+      var n = document.getElementById('nome-' + nova.id);
+      if (n) { n.focus(); n.select(); }
+    }
+    else if (a === 'abrir-carga' && f) openSheet(fid, eid);
+    else if (a === 'fechar-fundo') { if (ev.target === el) closeSheet(); }
+    else if (a === 'cancelar') closeSheet();
+    else if (a === 'salvar') saveSheet();
+    else if (a === 'un' && sheet) { sheet.un = el.getAttribute('data-u'); setUn(sheet.un); }
+    else if (a === 'bump') bump(parseFloat(el.getAttribute('data-d')));
+    else if (a === 'mov-ficha' && f) { mover(state.fichas, f, parseInt(el.getAttribute('data-d'), 10)); save(true); render(); refocus('mov-ficha', fid, '', el.getAttribute('data-d')); }
+    else if (a === 'mov-ex' && f) { mover(f.exs, exOf(f, eid), parseInt(el.getAttribute('data-d'), 10)); save(true); render(); refocus('mov-ex', fid, eid, el.getAttribute('data-d')); }
+    else if (a === 'add-ex') addEx(fid);
+    else if (a === 'del-ex' && f) { f.exs = f.exs.filter(function (e) { return e.id !== eid; }); save(true); render(); }
+    else if (a === 'del-ficha') { confirmId = fid; render(); }
+    else if (a === 'del-ficha-ok') { state.fichas = state.fichas.filter(function (x) { return x.id !== fid; }); confirmId = null; save(true); render(); }
+  });
+
+  document.addEventListener('change', function (ev) {
+    var el = ev.target;
+    var a = el.getAttribute && el.getAttribute('data-a');
+    if (!a) return;
+    var f = find(el.getAttribute('data-f'));
+    if (!f) return;
+    var e = f.exs.filter(function (x) { return x.id === el.getAttribute('data-e'); })[0];
+    if (a === 'carga' && e) { e.carga = el.value.trim(); save(true); }
+    else if (a === 'nome-ex' && e) { e.nome = el.value.trim() || e.nome; save(true); }
+    else if (a === 'sr-ex' && e) { e.sr = normSr(el.value); el.value = e.sr; save(true); }
+    else if (a === 'nome-ficha') { f.nome = el.value.trim() || f.nome; save(true); }
+  });
+
+  document.addEventListener('focusin', function (ev) {
+    if (ev.target.getAttribute && ev.target.getAttribute('data-a') === 'carga') {
+      var t = ev.target; setTimeout(function () { try { t.select(); } catch (e) {} }, 0);
+    }
+  });
+  document.addEventListener('keydown', function (ev) {
+    if (ev.key !== 'Enter') return;
+    var a = ev.target.getAttribute && ev.target.getAttribute('data-a');
+    if (a === 'novo-ex-input') { ev.preventDefault(); addEx(ev.target.getAttribute('data-f')); }
+    else if (a === 'carga' || a === 'nome-ex' || a === 'nome-ficha' || a === 'sr-ex') { ev.target.blur(); }
+  });
+
+  render();
+})();
+</script>
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function () {
+    navigator.serviceWorker.register('sw.js').catch(function () {});
+  });
+}
+</script>
+</body>
+</html>
